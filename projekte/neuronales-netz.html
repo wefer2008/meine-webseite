@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Neuronales Netz – Ziffernerkennung</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+  <header>
+    <h1>Rene's Webseite</h1>
+    <nav>
+      <a href="../uebungsprojekt.html">Start</a> |
+      <a href="../projekte.html">Projekte</a> |
+      <a href="../uebungsprojekt.html#kontakt">Kontakt</a>
+    </nav>
+  </header>
+
+  <main>
+    <article>
+      <h2>Neuronales Netz – Ziffernerkennung</h2>
+      <p>
+        Im Rahmen der Einsendeaufgabe IMIT25C (02, EA4) habe ich mit Python und
+        TensorFlow ein Convolutional Neural Network (CNN) trainiert,
+        das handgeschriebene Ziffern aus dem MNIST-Datensatz erkennt.
+        Anschließend liest das Programm fünf CSV-Dateien mit je einer
+        handgeschriebenen Ziffer ein und setzt daraus automatisch eine
+        fünfstellige Postleitzahl zusammen. Entwickelt und getestet auf
+        einem Raspberry Pi mit Thonny IDE.
+      </p>
+
+      <div class="hinweis-box">
+        <strong>Hinweis:</strong> Dieser Code läuft nicht im Browser, sondern lokal. Voraussetzungen:
+        <ul>
+          <li>Python 3</li>
+          <li>Installiertes TensorFlow</li>
+          <li>Entwickelt und getestet auf einem Raspberry Pi (Thonny IDE)</li>
+          <li>Die fünf CSV-Dateien (plz_0.csv bis plz_4.csv) im selben Ordner wie das Script</li>
+        </ul>
+      </div>
+
+      <h3>Quellcode</h3>
+      <pre><code>import tensorflow as tf
+import numpy as np
+import csv
+
+# -------------------------------------------------------
+# Funktion: Ziffer aus einer CSV-Datei einlesen
+# -------------------------------------------------------
+def ziffer_einlesen(dateiname):
+    """
+    Liest eine Ziffer aus einer CSV-Datei ein.
+    Die CSV-Datei enthält eine Zeile mit 784 Pixelwerten (28x28).
+    Gibt ein numpy-Array im Format (1, 28, 28, 1) zurück.
+    """
+    with open(dateiname, encoding="utf-8") as datei:
+        daten = datei.readlines()
+    daten_aufbereitet = daten[0].split(",")
+    return daten_aufbereitet
+
+
+# -------------------------------------------------------
+# Funktion: Daten für die Vorhersage aufbereiten
+# -------------------------------------------------------
+def daten_aufbereiten(rohdaten):
+    """
+    Wandelt eine Liste von 784 Pixelwerten in ein
+    numpy-Array im Format (1, 28, 28, 1) um,
+    das direkt für modell.predict() verwendet werden kann.
+    """
+    matrix = np.asarray(rohdaten, dtype=np.float32)
+    matrix = matrix.reshape(28, 28)
+    matrix_vorhersage = matrix.reshape(1, 28, 28, 1)
+    return matrix_vorhersage
+
+# -------------------------------------------------------
+# Funktion: Ziffer erkennen
+# -------------------------------------------------------
+def ziffer_erkennen(modell, matrix_vorhersage):
+    """
+    Gibt die erkannte Ziffer (0-9) zurück.
+    """
+    vorhersage = modell.predict(matrix_vorhersage, verbose=0)
+    return vorhersage.argmax()
+
+
+# -------------------------------------------------------
+# MNIST-Daten laden und Modell trainieren
+# -------------------------------------------------------
+print("Lade MNIST-Daten und trainiere Modell...")
+
+(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+
+training_anzahl = x_train.shape[0]
+training_matrix_x = x_train.shape[1]
+training_matrix_y = x_train.shape[2]
+training_matrix_z = 1
+
+test_anzahl = x_test.shape[0]
+test_matrix_x = x_test.shape[1]
+test_matrix_y = x_test.shape[2]
+test_matrix_z = 1
+
+x_train = x_train.reshape(training_anzahl, training_matrix_x, training_matrix_y, training_matrix_z)
+x_test = x_test.reshape(test_anzahl, test_matrix_x, test_matrix_y, test_matrix_z)
+
+input_shape = (training_matrix_x, training_matrix_y, training_matrix_z)
+
+modell = tf.keras.models.Sequential()
+modell.add(tf.keras.Input(shape=input_shape))
+modell.add(tf.keras.layers.Conv2D(16, kernel_size=(3, 3), activation="relu"))
+modell.add(tf.keras.layers.Conv2D(16, kernel_size=(3, 3), activation="relu"))
+modell.add(tf.keras.layers.MaxPooling2D(pool_size=(2, 2)))
+modell.add(tf.keras.layers.Flatten())
+modell.add(tf.keras.layers.Dense(10, activation="softmax"))
+
+modell.compile(optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
+modell.fit(x=x_train, y=y_train, epochs=1, verbose=1)
+
+# -------------------------------------------------------
+# Postleitzahl Ziffer für Ziffer einlesen und erkennen
+# -------------------------------------------------------
+csv_dateien = ["plz_0.csv", "plz_1.csv", "plz_2.csv", "plz_3.csv", "plz_4.csv"]
+
+erkannte_ziffern = []
+
+for dateiname in csv_dateien:
+    rohdaten = ziffer_einlesen(dateiname)
+    matrix_vorhersage = daten_aufbereiten(rohdaten)
+    ziffer = ziffer_erkennen(modell, matrix_vorhersage)
+    erkannte_ziffern.append(str(ziffer))
+
+print("\nErkannte Postleitzahl:", "".join(erkannte_ziffern))</code></pre>
+
+      <a class="download-link" href="code/Weferling_IMIT25C_02_EA4.py" download>
+        Weferling_IMIT25C_02_EA4.py herunterladen
+      </a>
+
+      <h3>Beispieldaten (CSV)</h3>
+      <p>
+        Die fünf CSV-Dateien enthalten je eine handgeschriebene Ziffer
+        (784 Pixelwerte) und müssen im selben Ordner wie das Script liegen:
+      </p>
+      <a class="download-link" href="code/plz_0.csv" download>plz_0.csv</a>
+      <a class="download-link" href="code/plz_1.csv" download>plz_1.csv</a>
+      <a class="download-link" href="code/plz_2.csv" download>plz_2.csv</a>
+      <a class="download-link" href="code/plz_3.csv" download>plz_3.csv</a>
+      <a class="download-link" href="code/plz_4.csv" download>plz_4.csv</a>
+    </article>
+  </main>
+
+  <footer>
+    <p>Kontakt: <a href="mailto:r.wefer@gmx.de">r.wefer@gmx.de</a></p>
+    <p>&copy; 2026 Rene</p>
+  </footer>
+
+</body>
+</html>

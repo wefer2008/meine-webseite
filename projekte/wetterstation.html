@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Sense-HAT Wetterstation</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+  <header>
+    <h1>Rene's Webseite</h1>
+    <nav>
+      <a href="../uebungsprojekt.html">Start</a> |
+      <a href="../projekte.html">Projekte</a> |
+      <a href="../uebungsprojekt.html#kontakt">Kontakt</a>
+    </nav>
+  </header>
+
+  <main>
+    <article>
+      <h2>Sense-HAT Wetterstation</h2>
+      <p>
+        Im Rahmen der Einsendeaufgabe IMIT21C (EA7) habe ich mit dem
+        Sense HAT auf dem Raspberry Pi Temperatur und Luftdruck gemessen.
+        Die Werte werden alle zwei Sekunden erfasst, anschließend mit
+        matplotlib in einem Diagramm mit zwei Y-Achsen (<code>twinx()</code>)
+        dargestellt und zusätzlich in Textdateien gespeichert.
+      </p>
+
+      <div class="hinweis-box">
+        <strong>Hinweis:</strong> Dieser Code läuft nicht im Browser, sondern lokal auf echter Hardware. Voraussetzungen:
+        <ul>
+          <li>Raspberry Pi mit angeschlossenem Sense HAT</li>
+          <li>Python 3 mit den Bibliotheken <code>sense_hat</code> und <code>matplotlib</code></li>
+          <li>Schreibrechte im Ausführungsordner (für die erzeugten .txt-Dateien)</li>
+        </ul>
+      </div>
+
+      <h3>Quellcode</h3>
+      <pre><code># die Importe
+from time import sleep
+from sense_hat import SenseHat
+import matplotlib.pyplot as plt
+
+
+# die Funktion wird regelmäßig aufgerufen
+# sie erhält zwei Listen als Argumente und hängt die aktuellen Werte an
+def messen(temperaturen, luftdruecke):
+    # die Temperatur beschaffen und auf zwei Stellen runden
+    temperatur = round(sense.get_temperature(), 2)
+    # den Luftdruck beschaffen und auf zwei Stellen runden
+    luftdruck = round(sense.get_pressure(), 2)
+    # die Werte an die Listen anhängen
+    temperaturen.append(temperatur)
+    luftdruecke.append(luftdruck)
+    # und ausgeben
+    print("Temperatur:", temperatur, "°C  |  Luftdruck:", luftdruck, "Millibar")
+
+# für die Wartezeit
+wartezeit = 2
+# für die Aufrufe
+aufrufe = 0
+maximale_aufrufe = 10
+# für die Steuerung
+stop = False
+
+# die Instanz für das Sense HAT erzeugen
+sense = SenseHat()
+
+# die leeren Listen
+temperaturen = []
+luftdruecke = []
+
+# der Aufruf
+while stop == False:
+    aufrufe = aufrufe + 1
+    messen(temperaturen, luftdruecke)
+    # warten
+    sleep(wartezeit)
+    if aufrufe == maximale_aufrufe:
+        stop = True
+
+print(temperaturen)
+print(luftdruecke)
+
+
+# über matplotlib zeichnen – beide Kurven in einem Fenster
+fig, ax1 = plt.subplots()
+
+ax1.plot(temperaturen, color="red")
+ax1.set_ylabel("Temperatur (°C)", color="red")
+ax1.set_xlabel("Messung")
+
+ax2 = ax1.twinx()
+ax2.plot(luftdruecke, color="blue")
+ax2.set_ylabel("Luftdruck (Millibar)", color="blue")
+
+plt.title("Wetterstation - Messwerte")
+plt.show()
+
+
+# Temperaturwerte in eine Textdatei schreiben
+datei = open("messwerte_temperatur.txt", "w")
+for temperatur in temperaturen:
+    datei.write(str(temperatur) + "\n")
+datei.close()
+
+# Luftdruckwerte in eine eigene Textdatei schreiben
+datei = open("messwerte_luftdruck.txt", "w")
+for luftdruck in luftdruecke:
+    datei.write(str(luftdruck) + "\n")
+datei.close()</code></pre>
+
+      <a class="download-link" href="code/Weferling_IMIT21C_EA7.py" download>
+        Weferling_IMIT21C_EA7.py herunterladen
+      </a>
+    </article>
+  </main>
+
+  <footer>
+    <p>Kontakt: <a href="mailto:r.wefer@gmx.de">r.wefer@gmx.de</a></p>
+    <p>&copy; 2026 Rene</p>
+  </footer>
+
+</body>
+</html>
